@@ -1,0 +1,289 @@
+<?php
+    //include('../../connection.php');
+    // $result = $mysqli->query('SELECT * FROM mdc_senior.sanitation_result1');
+    // $fp = fopen('php://output', 'w');
+    // if ($fp && $result) {
+    //     header('Content-Type: text/csv');
+    //     header('Content-Disposition: attachment; filename="export.csv"');
+    //     header('Pragma: no-cache');
+    //     header('Expires: 0');
+    //     while ($row = $result->fetch_array(MYSQLI_NUM)) {
+    //         fputcsv($fp, array_values($row));
+    //     }
+    // }
+?>
+<?php
+    // header("Content-type:application/vnd-ms-excel");
+    // header("Content-Disposition: attachment;filename=sanitized-raw.xls");
+    //
+    // echo '<table border="1">';
+    // echo '<tr>"
+    //         <td>YEAR</td>
+    //         <td>QUARTER</td>
+    //         <td>MONTH</td>
+    //         <td>STATUS</td>
+    //         <td>LBU CODE</td>
+    //         <td>LBU REBATE</td>
+    //         <td>DATE</td>
+    //         <td>BRANCH CODE</td>
+    //         <td>BRANCH NAME</td>
+    //         <td>MD NAME</td>
+    //         <td>LICENSE</td>
+    //         <td>ADDRESS</td>
+    //         <td>PRODUCT CODE</td>
+    //         <td>PRODUCT NAME</td>
+    //         <td>QTY TAB</td>
+    //         <td>QTY PACK</td>
+    //         <td>AMOUNT</td>
+    //         <td>DISTRICT</td>
+    //         <td>SAR CODE</td>
+    //         <td>SAR NAME</td>
+    //         <td>SAM CODE</td>
+    //         <td>SAM NAME</td>
+    //         <td>HSAR CODE</td>
+    //         <td>HSAR NAME</td>
+    //         <td>HDM CODE</td>
+    //         <td>HDM NAME</td>
+    //         <td>KASS CODE</td>
+    //         <td>KASS NAME</td>
+    //         <td>KASM CODE</td>
+    //         <td>KASM NAME</td>
+    //         <td>MD UNIVERSE</td>
+    //     </tr>';
+    //
+    // $result = $mysqli->query('SELECT * FROM mdc_senior.`sanitation_result1`');
+    //     while($res = $result->fetch_assoc()){
+    //
+    //   echo '<tr>"
+    //         <td>'.$res['raw_year'].'</td>
+    //         <td>'.$res['raw_quarter'].'</td>
+    //         <td>'.$res['raw_month'].'</td>
+    //         <td>'.$res['raw_status'].'</td>
+    //         <td>'.$res['raw_lbucode'].'</td>
+    //         <td>'.$res['raw_lburebate'].'</td>
+    //         <td>'.$res['raw_date'].'</td>
+    //         <td>'.$res['raw_branchcode'].'</td>
+    //         <td>'.$res['raw_branchname'].'</td>
+    //         <td>'.$res['raw_doctor'].'</td>
+    //         <td>'.$res['raw_license'].'</td>
+    //         <td>'.$res['raw_address'].'</td>
+    //         <td>'.$res['raw_productcode'].'</td>
+    //         <td>'.$res['raw_productname'].'</td>
+    //         <td>'.$res['raw_qtytab'].'</td>
+    //         <td>'.$res['raw_qtypack'].'</td>
+    //         <td>'.$res['raw_amount'].'</td>
+    //         <td>'.$res['raw_district'].'</td>
+    //         <td>'.$res['raw_sarcode'].'</td>
+    //         <td>'.$res['raw_sarname'].'</td>
+    //         <td>'.$res['raw_samcode'].'</td>
+    //         <td>'.$res['raw_samname'].'</td>
+    //         <td>'.$res['raw_hospcode'].'</td>
+    //         <td>'.$res['raw_hospname'].'</td>
+    //         <td>'.$res['raw_hdmcode'].'</td>
+    //         <td>'.$res['raw_hdmname'].'</td>
+    //         <td>'.$res['raw_kasscode'].'</td>
+    //         <td>'.$res['raw_kassname'].'</td>
+    //         <td>'.$res['raw_kassmcode'].'</td>
+    //         <td>'.$res['raw_kassmname'].'</td>
+    //         <td>'.$res['raw_universe'].'</td>
+    //       </tr>';
+    //     }
+    //
+    // echo '</table>';
+    // echo("<script>location.href='export_report.php';</script>");
+?>
+<?php
+session_start();
+/** UPDATES 06/08/2017
+* 1. change source to UNSANITIZED
+* 2. except ,"IPG-SP"
+*/
+/**
+* PHPExcel
+*
+* Copyright (C) 2006 - 2014 PHPExcel
+*
+* This library is free software; you can redistribute it and/or
+* modify it under the terms of the GNU Lesser General Public
+* License as published by the Free Software Foundation; either
+* version 2.1 of the License, or (at your option) any later version.
+*
+* This library is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+* Lesser General Public License for more details.
+*
+* You should have received a copy of the GNU Lesser General Public
+* License along with this library; if not, write to the Free Software
+* Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+*
+* @category   PHPExcel
+* @package    PHPExcel
+* @copyright  Copyright (c) 2006 - 2014 PHPExcel (http://www.codeplex.com/PHPExcel)
+* @license    http://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt	LGPL
+* @version    1.8.0, 2014-03-02
+*/
+
+/** Error reporting */
+ini_set('upload_max_filesize', '64M');
+ini_set('memory_limit', '-1');
+set_time_limit(0);
+ignore_user_abort(true);
+ini_set('display_errors', TRUE);
+ini_set('display_startup_errors', TRUE);
+include'../../connection.php';
+
+
+define('EOL',(PHP_SAPI == 'cli') ? PHP_EOL : '<br />');
+
+date_default_timezone_set('Asia/Manila');
+
+/** Include PHPExcel */
+require_once '../../plugins/Classes/PHPExcel.php';
+
+
+/*
+After doing some test, I've got these results benchmarked
+for writing to Excel2007:
+
+Number of rows	Seconds to generate
+200				3
+500				4
+1000			6
+2000			12
+4000			36
+8000			64
+15000			465
+*/
+
+// Create new PHPExcel object
+//echo date('H:i:s') , " Create new PHPExcel object" , EOL;
+$objPHPExcel = new PHPExcel();
+
+// Set document properties
+//echo date('H:i:s') , " Set properties" , EOL;
+$objPHPExcel->getProperties()->setCreator("BK_Senior_System")
+             ->setLastModifiedBy("BK_Senior_System")
+             ->setTitle("BK_Senior_System")
+             ->setSubject("BK_Senior_System")
+             ->setDescription("Extracted Data")
+             ->setKeywords("office 2007 openxml php")
+             ->setCategory("Extracted Data");
+
+$objPHPExcel->setActiveSheetIndex(0);
+
+$objPHPExcel->getActiveSheet()->setCellValue('A1', "YEAR");
+$objPHPExcel->getActiveSheet()->setCellValue('B1', "QUARTER");
+$objPHPExcel->getActiveSheet()->setCellValue('C1', "MONTH");
+$objPHPExcel->getActiveSheet()->setCellValue('D1', "STATUS");
+$objPHPExcel->getActiveSheet()->setCellValue('E1', "LBU CODE");
+$objPHPExcel->getActiveSheet()->setCellValue('F1', "LBU REBATE");
+$objPHPExcel->getActiveSheet()->setCellValue('G1', "DATE");
+$objPHPExcel->getActiveSheet()->setCellValue('H1', "BRANCH CODE");
+$objPHPExcel->getActiveSheet()->setCellValue('I1', "BRANCH NAME");
+$objPHPExcel->getActiveSheet()->setCellValue('J1', "MD NAME");
+$objPHPExcel->getActiveSheet()->setCellValue('K1', "LICENSE");
+$objPHPExcel->getActiveSheet()->setCellValue('L1', "ADDRESS");
+$objPHPExcel->getActiveSheet()->setCellValue('M1', "PRODUCT CODE");
+$objPHPExcel->getActiveSheet()->setCellValue('N1', "PRODUCT NAME");
+$objPHPExcel->getActiveSheet()->setCellValue('O1', "QTY TAB");
+$objPHPExcel->getActiveSheet()->setCellValue('P1', "QTY PACK");
+$objPHPExcel->getActiveSheet()->setCellValue('Q1', "AMOUNT");
+$objPHPExcel->getActiveSheet()->setCellValue('R1', "DISTRICT");
+$objPHPExcel->getActiveSheet()->setCellValue('S1', "SAR CODE");
+$objPHPExcel->getActiveSheet()->setCellValue('T1', "SAR NAME");
+$objPHPExcel->getActiveSheet()->setCellValue('U1', "SAM CODE");
+$objPHPExcel->getActiveSheet()->setCellValue('V1', "SAM NAME");
+$objPHPExcel->getActiveSheet()->setCellValue('W1', "HSAR CODE");
+$objPHPExcel->getActiveSheet()->setCellValue('X1', "HSAR NAME");
+$objPHPExcel->getActiveSheet()->setCellValue('Y1', "HDM CODE");
+$objPHPExcel->getActiveSheet()->setCellValue('Z1', "HDM NAME");
+$objPHPExcel->getActiveSheet()->setCellValue('AA1', "KASS CODE");
+$objPHPExcel->getActiveSheet()->setCellValue('AB1', "KASS NAME");
+$objPHPExcel->getActiveSheet()->setCellValue('AC1', "KASM CODE");
+$objPHPExcel->getActiveSheet()->setCellValue('AD1', "KASM NAME");
+$objPHPExcel->getActiveSheet()->setCellValue('AE1', "MD UNIVERSE");
+$objPHPExcel->getActiveSheet()->setCellValue('AF1', "MD CODE");
+
+foreach ($objPHPExcel->getWorksheetIterator() as $worksheet) {
+
+    $objPHPExcel->setActiveSheetIndex($objPHPExcel->getIndex($worksheet));
+
+    $sheet = $objPHPExcel->getActiveSheet();
+    $cellIterator = $sheet->getRowIterator()->current()->getCellIterator();
+    $cellIterator->setIterateOnlyExistingCells(true);
+    /** @var PHPExcel_Cell $cell */
+    foreach ($cellIterator as $cell) {
+        $sheet->getColumnDimension($cell->getColumn())->setAutoSize(true);
+    }
+}
+$objPHPExcel->getActiveSheet()->getPageSetup()->setRowsToRepeatAtTopByStartAndEnd(1, 1);
+
+$rowCount = 2;
+
+$result = $mysqli->query('SELECT * FROM mdc_senior.`sanitation_result1`');
+    while($res = $result->fetch_assoc()){
+
+      $objPHPExcel->getActiveSheet()->setCellValue('A'. $rowCount , $res['raw_year'])
+      										  ->setCellValue('B'. $rowCount , $res['raw_quarter'])
+      										  ->setCellValue('C'. $rowCount , $res['raw_month'])
+      										  ->setCellValue('D'. $rowCount , $res['raw_status'])
+      										  ->setCellValue('E'. $rowCount , $res['raw_lbucode'])
+      										  ->setCellValue('F'. $rowCount , $res['raw_lburebate'])
+      										  ->setCellValue('G'. $rowCount , $res['raw_date'])
+      										  ->setCellValue('H'. $rowCount , $res['raw_branchcode'])
+      										  ->setCellValue('I'. $rowCount , $res['raw_branchname'])
+      										  ->setCellValue('J'. $rowCount , $res['raw_doctor'])
+      										  ->setCellValue('K'. $rowCount , $res['raw_license'])
+      										  ->setCellValue('L'. $rowCount , $res['raw_address'])
+      										  ->setCellValue('M'. $rowCount , $res['raw_productcode'])
+      										  ->setCellValue('N'. $rowCount , $res['raw_productname'])
+      										  ->setCellValue('O'. $rowCount , $res['raw_qtytab'])
+      										  ->setCellValue('P'. $rowCount , $res['raw_qtypack'])
+      										  ->setCellValue('Q'. $rowCount , $res['raw_amount'])
+      										  ->setCellValue('R'. $rowCount , $res['raw_district'])
+      										  ->setCellValue('S'. $rowCount , $res['raw_sarcode'])
+      										  ->setCellValue('T'. $rowCount , $res['raw_sarname'])
+      										  ->setCellValue('U'. $rowCount , $res['raw_samcode'])
+      										  ->setCellValue('V'. $rowCount , $res['raw_samname'])
+      										  ->setCellValue('W'. $rowCount , $res['raw_hospcode'])
+      										  ->setCellValue('X'. $rowCount , $res['raw_hospname'])
+      										  ->setCellValue('Y'. $rowCount , $res['raw_hdmcode'])
+      										  ->setCellValue('Z'. $rowCount , $res['raw_hdmname'])
+      										  ->setCellValue('AA'. $rowCount , $res['raw_kasscode'])
+      										  ->setCellValue('AB'. $rowCount , $res['raw_kassname'])
+      										  ->setCellValue('AC'. $rowCount , $res['raw_kassmcode'])
+      										  ->setCellValue('AD'. $rowCount , $res['raw_kassmname'])
+      										  ->setCellValue('AE'. $rowCount , $res['raw_universe'])
+      										  ->setCellValue('AE'. $rowCount , $res['raw_mdcode']);
+     $rowCount++;
+
+     }
+
+foreach (range('A', $objPHPExcel->getActiveSheet()->getHighestDataColumn()) as $col) {
+        $objPHPExcel->getActiveSheet()
+                ->getColumnDimension($col)
+                ->setAutoSize(true);
+    }
+$objPHPExcel->getActiveSheet()->setTitle('Extracted Data');
+// Redirect output to a client�s web browser (Excel2007)
+header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+header('Content-Disposition: attachment;filename="EXPORTED_SENIOR_DATA.xlsx"');
+header('Cache-Control: max-age=0');
+// If you're serving to IE 9, then the following may be needed
+header('Cache-Control: max-age=1');
+
+// If you're serving to IE over SSL, then the following may be needed
+header ('Expires: Mon, 26 Jul 1997 05:00:00 GMT'); // Date in the past
+header ('Last-Modified: '.gmdate('D, d M Y H:i:s').' GMT'); // always modified
+header ('Cache-Control: cache, must-revalidate'); // HTTP/1.1
+header ('Pragma: public'); // HTTP/1.0
+// Save Excel 2007 file
+//echo date('H:i:s') , " Write to Excel2007 format" , EOL;
+$callStartTime = microtime(true);
+$objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel2007');
+$objWriter->save('php://output');
+$callEndTime = microtime(true);
+$callTime = $callEndTime - $callStartTime;
+?>
+?>

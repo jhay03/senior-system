@@ -1,0 +1,388 @@
+<?php
+session_start();
+include('../../../../connection.php');
+include '../class/DataSanitationRules.php';
+include '../class/DataSanitation.php';
+include('vendor/autoload.php');
+// spl_autoload_register(function ($class_name) {
+//     include '../class/'.$class_name . '.php';
+// });
+use FuzzyWuzzy\Fuzz;
+use FuzzyWuzzy\Process;
+
+$fuzz = new Fuzz();
+$process = new Process($fuzz);
+
+
+// $dataSanitation = new DataSanitation();
+// $raw_id = '24628,324025,324024,324027,78693';
+// $raw_table_name = 'raw_doctor,raw_license,raw_address,raw_branchname';
+// $result = $dataSanitation->getDataForRules($pdoConnSanitationResultDB, explode(',', $raw_id), $raw_table_name);
+//
+// foreach ($result as $key => $value) {
+//  echo $value[0];
+// }
+// header('content-type: application/json');
+// echo json_encode($result, JSON_PRETTY_PRINT);
+
+// $dataSanitation = new DataSanitation();
+// $result = $dataSanitation->getRulesDetails($conn_pdo, '10336608450524457');
+// echo $result;
+// echo '<br/>';
+// $count = $dataSanitation->countRuleDetailsMatch($pdoConnSanitationResultDB, $result);
+// $raw_id = $dataSanitation->getRawID($pdoConnSanitationResultDB, $result);
+//  print_r($raw_id);
+
+//
+// $dataSanitation = new DataSanitation();
+//
+// $result = $dataSanitation->getRulesDetails($conn_pdo, '10336608450524457');
+// $count = $dataSanitation->countRuleDetailsMatch($pdoConnSanitationResultDB, $result);
+// $raw_id = $dataSanitation->getRawID($pdoConnSanitationResultDB, $result);
+// $md_details = $dataSanitation->getMdDetails($conn_pdo, 'GO, LUIS RAYMOND');
+// $md_code = 'N/A';
+//     $md_class = 'N/A';
+//     $md_universe = 'N/A';
+//     foreach ($md_details as $key => $value) {
+//       $md_class = $value['class'];
+//       $md_code = $value['md_code'];
+//       $md_universe = $value['sanit_universe'];
+//     }
+//     date_default_timezone_set('Asia/Manila');
+//     $current_date = date("Y-m-d h:i:s");
+//     foreach ($raw_id as $key => $id) {
+//       //update
+//       $dataSanitation->applyRules($pdoConnSanitationResultDB, $md_class, $md_code, 'GO, LUIS RAYMOND', $md_universe, 'luffy', $id);
+//     }
+//
+//
+//
+//     $x = $dataSanitation->getDataForBroadCast($raw_id, 'GO, LUIS RAYMOND', 'luffy');
+//
+// // header('content-type: application/json');
+// // echo json_encode($x, JSON_PRETTY_PRINT);
+//  $dataSanitation = new DataSanitation();
+//  $result = $dataSanitation->executeBackgroundProcess('10336608450524457', 'GO, LUIS RAYMOND', 'luffyX');
+//  // $result = $dataSanitation->getRulesDetails($conn_pdo, '10336608450524457');
+//  // $rule_code = '10336608450524457';
+//  // $md = 'GO, LUIS RAYMOND';
+//  // $authUser = 'luffy';
+//  // $code = $rule_code;//escapeshellarg($rule_code);
+//  // $doctor = $md;//escapeshellarg($md);
+//  // $sanitized_by = $authUser;//escapeshellarg($authUser);
+//  // // $result = $dataSanitation->backgroundProcess("php background-process.php {$code} {$doctor} {$sanitized_by}");
+//  // $result = file_put_contents('log.txt', $code . $doctor . $sanitized_by.PHP_EOL , FILE_APPEND | LOCK_EX);;
+//  // $result = $dataSanitation->applyRules($pdoConnSanitationResultDB, '$md_class', '$md_code', 'GO, LUIS RAYMOND', '$md_universe', 'luffy', '$id');
+//  header('content-type: application/json');
+//  echo json_encode($result, JSON_PRETTY_PRINT);
+
+if(isset($_POST['cmd'])){
+
+  $cmd = $_POST['cmd'];
+
+  if ($cmd == 'get_filtered_group_data') {
+
+    $dataSanitation = new DataSanitation();
+    $data = $_POST['data'];
+    $district = $_POST['district'];
+    $category = $_POST['category'];
+    $md = $_POST['md'];
+    $filtered_md = $_POST['filtered_md'];
+    $license= $_POST['license'];
+    $loc = $_POST['loc'];
+    $branch = $_POST['branch'];
+    $lba = $_POST['lba'];
+    $filtered_by = $_POST['filtered_by'];
+    $md_list = $dataSanitation->getFilteredGroupPerDistrict($filtered_by, $pdoConnSanitationResultDB, $data, explode(',', $district), $category, $md, $fuzz, $filtered_md, $license, $loc, $branch, $lba);
+    $count = count($md_list);
+    if($count > 0){
+
+      foreach ($md_list as $key => $value) {
+        $arr[$value['id']][$key] = $value;
+      }
+
+      $x = null;
+      foreach ($arr as $key => $value) {
+        if($x != $key){
+          $array_result[] = array(
+            "id" => $key,
+            "text" => $key . '- ' .  count($value) . ' Record(s)'
+          );
+        }
+        $x = $key;
+      }
+    }else {
+      $array_result[] = array(
+        "id" => '',
+        "text" => ''
+      );
+    }
+
+
+    header('content-type: application/json');
+    echo json_encode($array_result, JSON_PRETTY_PRINT);
+
+  }else if($cmd == 'get_group_md_by_district'){
+
+    $dataSanitation = new DataSanitation();
+    $data = $_POST['data'];
+    $district = $_POST['district'];
+    $category = $_POST['category'];
+    $md = $_POST['md'];
+    $filtered_md = $_POST['filtered_md'];
+    $license= $_POST['license'];
+    $loc = $_POST['loc'];
+    $branch = $_POST['branch'];
+    $lba = $_POST['lba'];
+    $filtered_by = $_POST['filtered_by'];
+    $md_list = $dataSanitation->getGroupMDPerDistrict($filtered_by, $pdoConnSanitationResultDB, $data, $district, $category, $md, $fuzz, $filtered_md, $license, $loc, $branch, $lba);
+    $count = count($md_list);
+    if($count > 0){
+
+      foreach ($md_list as $key => $value) {
+        $arr[$value['id']][$key] = $value;
+      }
+
+      $x = null;
+      foreach ($arr as $key => $value) {
+        if($x != $key){
+          $array_result[] = array(
+            "id" => $key,
+            "text" => $key . '- ' .  count($value) . ' Record(s)'
+          );
+        }
+        $x = $key;
+      }
+    }else {
+      $array_result[] = array(
+        "id" => '',
+        "text" => ''
+      );
+    }
+
+
+    header('content-type: application/json');
+    echo json_encode($array_result, JSON_PRETTY_PRINT);
+
+  }else if ($cmd == 'get_group_ln_by_district') {
+    $dataSanitation = new DataSanitation();
+    $data = $_POST['data'];
+    $district = $_POST['district'];
+    $category = $_POST['category'];
+    $md = $_POST['md'];
+    $ln_list = $dataSanitation->getGroupLNPerDistrict($pdoConnSanitationResultDB, $data, $district, $category, $md, $fuzz);
+    $count = count($ln_list);
+    if($count > 0){
+
+      foreach ($ln_list as $key => $value) {
+        $arr[$value['id']][$key] = $value;
+      }
+
+      $x = null;
+      foreach ($arr as $key => $value) {
+        if($x != $key){
+          $array_result[] = array(
+            "id" => $key,
+            "text" => $key . '- ' .  count($value) . ' Record(s)'
+          );
+        }
+        $x = $key;
+      }
+    }else {
+      $array_result[] = array(
+        "id" => '',
+        "text" => ''
+      );
+    }
+
+    header('content-type: application/json');
+    echo json_encode($array_result, JSON_PRETTY_PRINT);
+
+  }else if ($cmd == 'get_group_loc_by_district') {
+    $dataSanitation = new DataSanitation();
+    $data = $_POST['data'];
+    $district = $_POST['district'];
+    $category = $_POST['category'];
+    $md = $_POST['md'];
+    $loc_list = $dataSanitation->getGroupLocPerDistrict($pdoConnSanitationResultDB, $data, $district, $category, $md, $fuzz);
+    $count = count($loc_list);
+    if($count > 0){
+
+      foreach ($loc_list as $key => $value) {
+        $arr[$value['id']][$key] = $value;
+      }
+
+      $x = null;
+      foreach ($arr as $key => $value) {
+        if($x != $key){
+          $array_result[] = array(
+            "id" => $key,
+            "text" => $key . '- ' .  count($value) . ' Record(s)'
+          );
+        }
+        $x = $key;
+      }
+    }else {
+      $array_result[] = array(
+        "id" => '',
+        "text" => ''
+      );
+    }
+
+    header('content-type: application/json');
+    echo json_encode($array_result, JSON_PRETTY_PRINT);
+
+  }else if ($cmd == 'get_group_branch_by_district') {
+    $dataSanitation = new DataSanitation();
+    $data = $_POST['data'];
+    $district = $_POST['district'];
+    $category = $_POST['category'];
+    $md = $_POST['md'];
+    $branch_list = $dataSanitation->getGroupBranchPerDistrict($pdoConnSanitationResultDB, $data, $district, $category, $md, $fuzz);
+    $count = count($branch_list);
+    if($count > 0){
+
+      foreach ($branch_list as $key => $value) {
+        $arr[$value['id']][$key] = $value;
+      }
+
+      $x = null;
+      foreach ($arr as $key => $value) {
+        if($x != $key){
+          $array_result[] = array(
+            "id" => $key,
+            "text" => $key . '- ' .  count($value) . ' Record(s)'
+          );
+        }
+        $x = $key;
+      }
+    }else {
+      $array_result[] = array(
+        "id" => '',
+        "text" => ''
+      );
+    }
+
+    header('content-type: application/json');
+    echo json_encode($array_result, JSON_PRETTY_PRINT);
+
+  }else if ($cmd == 'get_group_lba_by_district') {
+    $dataSanitation = new DataSanitation();
+    $data = $_POST['data'];
+    $district = $_POST['district'];
+    $category = $_POST['category'];
+    $md = $_POST['md'];
+    $lba_list = $dataSanitation->getGroupLBAPerDistrict($pdoConnSanitationResultDB, $data, $district, $category, $md, $fuzz);
+    $count = count($lba_list);
+    if($count > 0){
+
+      foreach ($lba_list as $key => $value) {
+        $arr[$value['id']][$key] = $value;
+      }
+
+      $x = null;
+      foreach ($arr as $key => $value) {
+        if($x != $key){
+          $array_result[] = array(
+            "id" => $key,
+            "text" => $key . '- ' .  count($value) . ' Record(s)'
+          );
+        }
+        $x = $key;
+      }
+    }else {
+      $array_result[] = array(
+        "id" => '',
+        "text" => ''
+      );
+    }
+
+    header('content-type: application/json');
+    echo json_encode($array_result, JSON_PRETTY_PRINT);
+
+  }else if ($cmd == 'search_data_sanitation_by_md_name') {
+    $dataSanitation = new DataSanitation();
+    $data = $_POST['data'];
+    $district = $_POST['district'];
+    $category = $_POST['category'];
+    $result = $dataSanitation->searchDataSanitation($pdoConnSanitationResultDB, $data, $district, $category);
+
+    header('content-type: application/json');
+    echo json_encode($result, JSON_PRETTY_PRINT);
+
+  }else if ($cmd == 'get_district_list') {
+    $dataSanitation = new DataSanitation();
+    $auth_usercode = $_POST['auth_usercode'];
+    $result = $dataSanitation->getAllDistrictPerMember($conn_pdo, $auth_usercode);
+
+    header('content-type: application/json');
+    echo json_encode($result, JSON_PRETTY_PRINT);
+
+  }else if ($cmd == 'get_md_list') {
+    $dataSanitation = new DataSanitation();
+    $auth_usercode = $_POST['auth_usercode'];
+    $result = $dataSanitation->getMDlist($conn_pdo, $auth_usercode);
+
+    header('content-type: application/json');
+    echo json_encode($result, JSON_PRETTY_PRINT);
+
+  }else if ($cmd == 'get_district_details') {
+    $dataSanitation = new DataSanitation();
+    $district = $_POST['district'];
+    $result = $dataSanitation->getDistrictDetails($conn_pdo, explode(',', $district), $pdoConnSanitationResultDB);
+
+    header('content-type: application/json');
+    echo json_encode($result, JSON_PRETTY_PRINT);
+
+  }else if ($cmd == 'update_sanitation_table') {
+    $dataSanitation = new DataSanitation();
+    $raw_id = $_POST['raw_id'];
+    $md = $_POST['doctor_list'];
+    $table_name = $_POST['table_name'];
+    $result = $dataSanitation->updateDataSanitationResult1($pdoConnSanitationResultDB, explode(',', $raw_id), $md, $conn_pdo, $_SESSION['authUser'], $_SESSION['auth_usercode'], explode(',', $table_name), $table_name);
+
+    header('content-type: application/json');
+    echo json_encode($result, JSON_PRETTY_PRINT);
+
+  }else if ($cmd == 'update_unclassified_table') {
+    $dataSanitation = new DataSanitation();
+    $raw_id = $_POST['raw_id'];
+    $md = $_POST['doctor_list'];
+    $result = $dataSanitation->setUnclasified($pdoConnSanitationResultDB, explode(',', $raw_id), 'UNCLASSIFIED', $_SESSION['authUser']);
+
+    header('content-type: application/json');
+    echo json_encode($result, JSON_PRETTY_PRINT);
+
+  }else if ($cmd == 'check_md_name') {
+    $dataSanitation = new DataSanitation();
+    $orig_name = $_POST['orig_name'];
+    $md = $_POST['doctor_list'];
+    $result = $dataSanitation->checkMDname($conn_pdo, $md, $orig_name);
+
+    header('content-type: application/json');
+    echo json_encode($result, JSON_PRETTY_PRINT);
+
+  }elseif ($cmd == 'get_group_count') {
+
+    $dataSanitation = new DataSanitation();
+    $count = $dataSanitation->getCount($pdoConnSanitationResultDB, '$val');
+    header('content-type: application/json');
+    echo json_encode($count, JSON_PRETTY_PRINT);
+
+  }elseif ($cmd == 'add_md_details') {
+    $sanit_mdname = $_POST['mdname'];
+    $sanit_mdcode = $_POST['mdCode'];
+    $sanit_group = $_POST['mdStatus'];
+    $sanit_universe = $_POST['mdUniverse'];
+    $dataSanitation = new DataSanitation();
+    $result = $dataSanitation->addMD($conn_pdo, $sanit_mdname, $sanit_mdcode, $sanit_group, $sanit_universe);
+    header('content-type: application/json');
+    echo json_encode($result, JSON_PRETTY_PRINT);
+
+  }
+
+
+}
+
+
+ ?>
